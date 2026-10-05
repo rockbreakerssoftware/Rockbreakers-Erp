@@ -16,3 +16,5 @@ services:
         generateValue: true
       - key: SEED_ON_BOOT
         value: "true"
+      - key: CLOUDINARY_URL
+        sync: false

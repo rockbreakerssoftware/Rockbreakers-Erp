@@ -242,8 +242,18 @@ const HolidaySchema = new Schema({
 
 /* --------------------------------------------------------------- misc */
 
+/**
+ * An image, stored either on Cloudinary (when configured) or inline in Mongo.
+ * Both are referenced by _id and served through /api/media/:id, so the rest of
+ * the app never needs to know which backend holds a given photo.
+ */
 const MediaSchema = new Schema({
-  data: { type: Buffer, required: true, select: false },
+  provider: { type: String, enum: ['mongo', 'cloudinary'], default: 'mongo' },
+  data: { type: Buffer, select: false },   // mongo backend only
+  publicId: String,                         // cloudinary backend only
+  url: String,
+  width: Number,
+  height: Number,
   contentType: { type: String, default: 'image/jpeg' },
   size: Number,
   kind: { type: String, enum: ['SELFIE', 'CAPTURE', 'RECEIPT', 'OTHER'], default: 'OTHER' },

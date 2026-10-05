@@ -1,33 +1,22 @@
 const express = require('express');
-const { Attendance, SiteCheckIn, Job, Site, Media } = require('../models');
+const { Attendance, SiteCheckIn, Job, Site } = require('../models');
 const { authenticate, requirePermission, logActivity, visibleUserIds, scopeFor } = require('../middleware/auth');
 const { wrap, httpError } = require('../utils/crud');
 const { haversine, reverseGeocode, presenceFlags, todayKey } = require('../utils/geo');
+const { storeImage } = require('../utils/storage');
 
 const router = express.Router();
 router.use(authenticate);
 
-/**
- * Stores a base64 selfie. The client resizes before upload, so what arrives
- * is already ~60 KB — Render's free disk is ephemeral, which is why these
- * live in Mongo rather than on the filesystem.
- */
-async function storeSelfie(dataUrl, userId) {
-  if (!dataUrl) throw httpError(400, 'A selfie is required');
-  const m = /^data:(image\/\w+);base64,(.+)$/.exec(dataUrl);
-  if (!m) throw httpError(400, 'The selfie image is not readable');
-  const buf = Buffer.from(m[2], 'base64');
-  if (buf.length > 900 * 1024) throw httpError(413, 'That image is too large — please retake it');
-  const media = await Media.create({
-    data: buf, contentType: m[1], size: buf.length, kind: 'SELFIE', uploadedBy: userId,
-  });
-  return media._id;
-}
-
 /** Builds the common proof-of-presence block shared by both record types. */
 async function buildPoint(body, userId) {
   const receivedAt = new Date();
-  const media = await storeSelfie(body.selfie, userId);
+  if (!body.selfie) throw httpError(400, 'A selfie is required');
+  // Resized in the browser before upload, so this arrives at roughly 60 KB.
+  const stored = await storeImage(body.selfie, {
+    kind: 'SELFIE', userId, maxBytes: 900 * 1024,
+  });
+  const media = stored._id;
   const address = await reverseGeocode(body.lat, body.lng);
   return {
     media,

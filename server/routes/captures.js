@@ -1,7 +1,8 @@
 const express = require('express');
-const { Capture, Job, Media } = require('../models');
+const { Capture, Job } = require('../models');
 const { authenticate, requirePermission, logActivity } = require('../middleware/auth');
 const { wrap, httpError } = require('../utils/crud');
+const { storeImage } = require('../utils/storage');
 
 const router = express.Router();
 router.use(authenticate);
@@ -23,13 +24,9 @@ router.post('/', requirePermission('capture', 'create'), wrap(async (req, res) =
   const job = await Job.findById(jobId).lean();
   if (!job) return res.status(404).json({ error: 'Job not found' });
 
-  const m = /^data:(image\/\w+);base64,(.+)$/.exec(image || '');
-  if (!m) throw httpError(400, 'A photo is required');
-  const buf = Buffer.from(m[2], 'base64');
-  if (buf.length > 1200 * 1024) throw httpError(413, 'That photo is too large — please retake it');
-
-  const media = await Media.create({
-    data: buf, contentType: m[1], size: buf.length, kind: 'CAPTURE', uploadedBy: req.user._id,
+  if (!image) throw httpError(400, 'A photo is required');
+  const media = await storeImage(image, {
+    kind: 'CAPTURE', userId: req.user._id, maxBytes: 1200 * 1024,
   });
   const capture = await Capture.create({
     job: jobId, site: job.site, user: req.user._id, media: media._id,

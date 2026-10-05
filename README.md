@@ -19,7 +19,7 @@ Design notes are in [idea.md](idea.md); the build plan is in [plan.md](plan.md).
 | Reverse geocoding | **Nominatim (OSM)** — free, called once per check-in, cached on the record |
 | Geofencing | Haversine, computed in our own code — no service at all |
 | Selfies | `getUserMedia` + canvas, camera only, resized to ~60 KB in the browser |
-| Images | Stored in MongoDB, served from `/api/media/:id` |
+| Images | **Cloudinary** when `CLOUDINARY_URL` is set, otherwise MongoDB — both served through `/api/media/:id` |
 
 Everything above is free. No paid API keys anywhere.
 
@@ -93,6 +93,7 @@ Push this repository to GitHub, then on Render → **New → Web Service**:
 | `JWT_SECRET` | a long random string |
 | `NODE_ENV` | `production` |
 | `SEED_ON_BOOT` | `true` for the first deploy, then set it to `false` |
+| `CLOUDINARY_URL` | optional — `cloudinary://<api_key>:<api_secret>@<cloud_name>`. Set it and photos go to Cloudinary instead of MongoDB. |
 
 `SEED_ON_BOOT` is safe to leave on — roles and departments are upserted, and demo users are only created
 when the database has no users at all. Turning it off afterwards just saves a few hundred milliseconds
@@ -110,11 +111,32 @@ One URL serving everything. No CORS, no second service, no custom domain needed.
 
 | Constraint | How the app handles it |
 |---|---|
-| **Disk is ephemeral** — anything written to disk vanishes on restart | Images go to MongoDB, never to the filesystem. Set `CLOUDINARY_URL` later if you outgrow it. |
+| **Disk is ephemeral** — anything written to disk vanishes on restart | Images never touch the filesystem. They go to Cloudinary when `CLOUDINARY_URL` is set, otherwise into MongoDB. |
 | **Service sleeps after 15 min idle**, ~50 s to wake | The first screen is a branded "starting up" state that explains the wait instead of showing a blank page. |
-| **512 MB database** | Selfies are resized to 640 px and compressed to ~60 KB in the browser before upload — roughly 8,000 check-ins. Receipts are compressed the same way. |
+| **512 MB database** | Selfies are resized to 640 px and compressed to ~60 KB in the browser before upload. With Cloudinary configured only the metadata lands in Mongo, so this stops being a limit at all. |
 | **No static outbound IP** | Atlas must allow `0.0.0.0/0`. |
 | **HTTPS required for camera and GPS** | Render provides HTTPS on every service, so both work out of the box. |
+
+---
+
+## Image storage
+
+Photos go to **Cloudinary** when `CLOUDINARY_URL` is set, and to **MongoDB** when it is not. Either way
+they are referenced by a `Media` id and fetched from `/api/media/:id`, so no other part of the app — and
+nothing in the client — needs to know which backend holds a given photo.
+
+Uploads use Cloudinary's **`authenticated` delivery type**, which matters here: a selfie carries a face,
+a timestamp and a location, and it exists to be evidence. Public delivery would make every photo readable
+forever by anyone who ever saw the link. Instead the asset is unreachable without a signature, our own
+auth gates the request, and `/api/media/:id` answers with a 302 to a URL signed for ten minutes. Guessing
+the Cloudinary path directly returns 401.
+
+If an upload fails, the bytes are written to MongoDB instead rather than the request being rejected. An
+engineer standing on a site cannot come back and retry later, so losing their proof of presence to a
+third-party outage is the worse failure.
+
+Images already stored in MongoDB keep working after you switch Cloudinary on; the `provider` field on
+each `Media` record decides how it is served.
 
 ---
 

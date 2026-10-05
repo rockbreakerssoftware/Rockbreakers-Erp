@@ -3,7 +3,9 @@
   "version": "1.0.0",
   "private": true,
   "type": "commonjs",
-  "engines": { "node": ">=18" },
+  "engines": {
+    "node": ">=18"
+  },
   "scripts": {
     "build": "npm install --prefix client && npm run build --prefix client",
     "start": "node server/index.js",
@@ -13,6 +15,7 @@
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",
+    "cloudinary": "^2.11.0",
     "cookie-parser": "^1.4.6",
     "cors": "^2.8.5",
     "dotenv": "^16.4.5",
@@ -20,5 +23,7 @@
     "jsonwebtoken": "^9.0.2",
     "mongoose": "^8.5.1"
   },
-  "devDependencies": { "nodemon": "^3.1.4" }
+  "devDependencies": {
+    "nodemon": "^3.1.4"
+  }
 }

@@ -1,7 +1,8 @@
 const express = require('express');
-const { Expense, Media, Job } = require('../models');
+const { Expense, Job } = require('../models');
 const { authenticate, requirePermission, logActivity, visibleUserIds } = require('../middleware/auth');
 const { wrap, httpError } = require('../utils/crud');
+const { storeImage } = require('../utils/storage');
 
 const router = express.Router();
 router.use(authenticate);
@@ -80,14 +81,10 @@ router.post('/', requirePermission('expense', 'create'), wrap(async (req, res) =
   if (!body.category) throw httpError(400, 'Every expense must have a category');
 
   if (receiptImage) {
-    const m = /^data:(image\/\w+);base64,(.+)$/.exec(receiptImage);
-    if (m) {
-      const buf = Buffer.from(m[2], 'base64');
-      const media = await Media.create({
-        data: buf, contentType: m[1], size: buf.length, kind: 'RECEIPT', uploadedBy: req.user._id,
-      });
-      body.receipt = media._id;
-    }
+    const media = await storeImage(receiptImage, {
+      kind: 'RECEIPT', userId: req.user._id, maxBytes: 1500 * 1024,
+    });
+    body.receipt = media._id;
   }
   const e = await Expense.create({ ...body, user: req.user._id });
   logActivity(req, {
