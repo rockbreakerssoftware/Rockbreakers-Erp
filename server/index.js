@@ -36,6 +36,7 @@ app.use('/api/expenses', require('./routes/expenses'));
 app.use('/api/leaves', require('./routes/leaves'));
 app.use('/api/media', require('./routes/media'));
 app.use('/api/logs', require('./routes/logs'));
+app.use('/api/payroll', require('./routes/payroll'));
 app.use('/api/dashboard', require('./routes/dashboard'));
 
 /* ------------------------------------------------- SPA (single service) */

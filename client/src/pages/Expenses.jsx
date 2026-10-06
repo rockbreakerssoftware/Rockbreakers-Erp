@@ -210,9 +210,10 @@ function ExpenseForm({ onClose, onSaved }) {
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    Promise.all([api.get('/jobs'), api.get('/sites')])
-      .then(([j, s]) => { setJobs(j); setSites(s); })
-      .catch(() => {});
+    // Fetched separately on purpose: an accountant has no job:read, and a
+    // combined call would have failed both, leaving the required site empty.
+    api.get('/jobs').then(setJobs).catch(() => setJobs([]));
+    api.get('/sites').then(setSites).catch(() => setSites([]));
   }, []);
 
   const set = (k) => (e) => {

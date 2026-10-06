@@ -28,7 +28,8 @@ const ROLES = [
       ...all('capture', ['create', 'read', 'delete']),
       ...all('requirement', ['create', 'read', 'update', 'approve']),
       ...all('expense', ['read', 'update', 'approve', 'reimburse']),
-      ...all('leave', ['read', 'approve']), ...all('report', ['read']), ...all('log', ['read']),
+      ...all('leave', ['read', 'approve']), ...all('payroll', ['read']),
+      ...all('report', ['read']), ...all('log', ['read']),
     ],
   },
   {
@@ -42,6 +43,7 @@ const ROLES = [
       ...team('requirement', ['read', 'approve']), ...own('requirement', ['create']),
       ...team('expense', ['read', 'approve']), ...own('expense', ['create']),
       ...team('leave', ['read', 'approve']), ...own('leave', ['create']),
+      ...team('payroll', ['read']),
       ...all('report', ['read']), 'log:read:team',
     ],
   },
@@ -49,7 +51,10 @@ const ROLES = [
     key: 'engineer', name: 'Engineer', isSystem: true,
     description: 'Field engineer: own calendar, attendance, site evidence and expenses.',
     permissions: [
-      'user:read:own', 'site:read:all', 'customer:read:all',
+      'user:read:own',
+      // Read-only on sites so the expense form can offer a site list. It does
+      // not surface a Sites section, which is gated on being able to manage them.
+      'site:read:all',
       ...own('job', ['read']), 'job:update:own',
       ...own('attendance', ['create', 'read']),
       ...own('capture', ['create', 'read']),
@@ -73,7 +78,7 @@ const ROLES = [
     key: 'purchase_officer', name: 'Purchase Officer', isSystem: true,
     description: 'Checks availability and procures against approved requirements.',
     permissions: [
-      'user:read:own', 'site:read:all', 'customer:read:all', 'job:read:all',
+      'user:read:own', 'site:read:all',
       ...all('requirement', ['read', 'update', 'approve']),
       ...own('expense', ['create', 'read']), ...own('attendance', ['create', 'read']),
       ...own('leave', ['create', 'read']), 'report:read:department',
@@ -81,22 +86,28 @@ const ROLES = [
   },
   {
     key: 'accountant', name: 'Accountant', isSystem: true,
-    description: 'Verifies and reimburses expenses across the company.',
+    description: 'Verifies and reimburses expenses, and reads monthly attendance for salary.',
     permissions: [
-      'user:read:all', 'site:read:all', 'job:read:all',
+      // Reads people and sites to build payroll and tag own expenses, but
+      // manages neither — so no Users or Sites section appears for them.
+      'user:read:all', 'site:read:all',
       ...all('expense', ['read', 'update', 'approve', 'reimburse']), 'expense:create:own',
-      ...own('attendance', ['create', 'read']), ...own('leave', ['create', 'read']),
+      ...all('attendance', ['read']), ...own('attendance', ['create']),
+      ...all('payroll', ['read']),
+      ...own('leave', ['create', 'read']), 'leave:read:all',
       ...all('report', ['read']), 'log:read:all',
     ],
   },
   {
     key: 'hr', name: 'HR', isSystem: true,
-    description: 'Employee records, attendance and leave.',
+    description: 'Employee records, attendance, leave and monthly payroll input.',
     permissions: [
       ...all('user', ['create', 'read', 'update']), 'role:read:all', ...all('department', ['read']),
       ...all('attendance', ['read', 'approve']), ...all('leave', ['read', 'approve']),
+      ...all('payroll', ['read']),
       ...own('expense', ['create', 'read']), ...own('attendance', ['create']),
-      'report:read:all', 'log:read:all', 'job:read:all',
+      'site:read:all',
+      'report:read:all', 'log:read:all',
     ],
   },
 ];

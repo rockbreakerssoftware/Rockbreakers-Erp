@@ -4,37 +4,53 @@ import Icon from './Icon';
 import { IconButton, Avatar, useClickAway } from './ui';
 import { useAuth, scopeFor } from '../lib/auth';
 
+/**
+ * Navigation is gated on what a role actually works in, which is not the same
+ * as what it can read. An engineer holds site:read so the expense form can
+ * offer a site list, but sites are not something they maintain — so the
+ * master-data sections ask for a manage permission (create or update) rather
+ * than read. Everything else asks for the read that matches its page.
+ */
+const can = (user, resource, action) => scopeFor(user, resource, action) != null;
+const manages = (resource) => (u) => can(u, resource, 'create') || can(u, resource, 'update');
+
 const NAV = [
   {
     group: null,
     items: [
       { to: '/', label: 'Dashboard', icon: 'dashboard', end: true },
       { to: '/calendar', label: 'Work calendar', icon: 'calendar' },
-      { to: '/jobs', label: 'Jobs', icon: 'briefcase', need: ['job', 'read'] },
+      { to: '/jobs', label: 'Jobs', icon: 'briefcase', show: (u) => can(u, 'job', 'read') },
       { to: '/attendance', label: 'Attendance', icon: 'clock' },
     ],
   },
   {
     group: 'Field',
     items: [
-      { to: '/requirements', label: 'Requirements', icon: 'box', need: ['requirement', 'read'] },
-      { to: '/expenses', label: 'Expenses', icon: 'receipt', need: ['expense', 'read'] },
+      { to: '/requirements', label: 'Requirements', icon: 'box', show: (u) => can(u, 'requirement', 'read') },
+      { to: '/expenses', label: 'Expenses', icon: 'receipt', show: (u) => can(u, 'expense', 'read') },
+    ],
+  },
+  {
+    group: 'People & pay',
+    items: [
+      { to: '/payroll', label: 'Salary & attendance', icon: 'chart', show: (u) => can(u, 'payroll', 'read') },
+      { to: '/users', label: 'Employees', icon: 'users', show: manages('user') },
     ],
   },
   {
     group: 'Master data',
     items: [
-      { to: '/sites', label: 'Sites', icon: 'map', need: ['site', 'read'] },
-      { to: '/customers', label: 'Customers', icon: 'building', need: ['customer', 'read'] },
+      { to: '/sites', label: 'Sites', icon: 'map', show: manages('site') },
+      { to: '/customers', label: 'Customers', icon: 'building', show: manages('customer') },
     ],
   },
   {
     group: 'Administration',
     items: [
-      { to: '/users', label: 'Users', icon: 'users', need: ['user', 'read'] },
-      { to: '/roles', label: 'Roles & permissions', icon: 'shield', need: ['role', 'read'] },
-      { to: '/departments', label: 'Departments', icon: 'building', need: ['department', 'read'] },
-      { to: '/logs', label: 'Activity log', icon: 'list', need: ['log', 'read'] },
+      { to: '/roles', label: 'Roles & permissions', icon: 'shield', show: (u) => can(u, 'role', 'read') },
+      { to: '/departments', label: 'Departments', icon: 'building', show: (u) => can(u, 'department', 'read') },
+      { to: '/logs', label: 'Activity log', icon: 'list', show: (u) => can(u, 'log', 'read') },
     ],
   },
 ];
@@ -61,7 +77,7 @@ export default function Shell({ children }) {
 
   useEffect(() => { setOpen(false); }, [location.pathname]);
 
-  const visible = (item) => !item.need || scopeFor(user, item.need[0], item.need[1]) != null;
+  const visible = (item) => !item.show || item.show(user);
 
   const current = NAV.flatMap((g) => g.items).find(
     (i) => i.to === location.pathname || (i.to !== '/' && location.pathname.startsWith(i.to)),

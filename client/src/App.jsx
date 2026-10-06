@@ -15,6 +15,7 @@ import Departments from './pages/Departments';
 import Expenses from './pages/Expenses';
 import Requirements from './pages/Requirements';
 import Logs from './pages/Logs';
+import Payroll from './pages/Payroll';
 import Profile from './pages/Profile';
 import { Empty } from './components/ui';
 
@@ -63,6 +64,7 @@ export default function App() {
         <Route path="/users" element={<Users />} />
         <Route path="/roles" element={<Roles />} />
         <Route path="/departments" element={<Departments />} />
+        <Route path="/payroll" element={<Payroll />} />
         <Route path="/logs" element={<Logs />} />
         <Route path="/profile" element={<Profile />} />
         <Route path="/login" element={<Navigate to="/" replace />} />

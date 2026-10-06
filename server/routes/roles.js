@@ -19,6 +19,7 @@ const RESOURCES = [
   { key: 'requirement', label: 'Requirements', actions: ['create', 'read', 'update', 'approve'] },
   { key: 'expense', label: 'Expenses', actions: ['create', 'read', 'update', 'approve', 'reimburse'] },
   { key: 'leave', label: 'Leave', actions: ['create', 'read', 'approve'] },
+  { key: 'payroll', label: 'Salary & attendance', actions: ['read'] },
   { key: 'report', label: 'Reports & dashboard', actions: ['read'] },
   { key: 'log', label: 'Activity log', actions: ['read'] },
 ];
