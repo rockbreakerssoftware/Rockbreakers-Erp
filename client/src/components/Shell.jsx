@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import { NavLink, useLocation, useNavigate } from 'react-router-dom';
+import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
+import { NavLink, Link, useLocation, useNavigate } from 'react-router-dom';
 import Icon from './Icon';
 import { IconButton, Avatar, useClickAway } from './ui';
 import { useAuth, scopeFor } from '../lib/auth';
@@ -49,113 +49,296 @@ const NAV = [
     group: 'Administration',
     items: [
       { to: '/roles', label: 'Roles & permissions', icon: 'shield', show: (u) => can(u, 'role', 'read') },
-      { to: '/departments', label: 'Departments', icon: 'building', show: (u) => can(u, 'department', 'read') },
+      { to: '/departments', label: 'Departments', icon: 'office', show: (u) => can(u, 'department', 'read') },
       { to: '/logs', label: 'Activity log', icon: 'list', show: (u) => can(u, 'log', 'read') },
     ],
   },
 ];
 
+/* Routes an engineer uses all day, in the order they use them. The bottom bar
+   takes the first four of these that the role can actually reach. */
+const THUMB_ORDER = ['/', '/calendar', '/attendance', '/jobs', '/expenses', '/requirements', '/payroll'];
+
+function useStickyState(key, initial) {
+  const [value, setValue] = useState(() => {
+    try { const v = localStorage.getItem(key); return v === null ? initial : JSON.parse(v); }
+    catch { return initial; }
+  });
+  useEffect(() => {
+    try { localStorage.setItem(key, JSON.stringify(value)); } catch { /* private mode */ }
+  }, [key, value]);
+  return [value, setValue];
+}
+
 function useTheme() {
-  const [theme, setTheme] = useState(() => localStorage.getItem('rb-theme') || 'system');
+  const [theme, setTheme] = useStickyState('rb-theme', 'system');
   useEffect(() => {
     const root = document.documentElement;
     if (theme === 'system') root.removeAttribute('data-theme');
     else root.setAttribute('data-theme', theme);
-    try { localStorage.setItem('rb-theme', theme); } catch { /* private mode */ }
   }, [theme]);
   return [theme, setTheme];
 }
 
 export default function Shell({ children }) {
   const { user, logout } = useAuth();
-  const [open, setOpen] = useState(false);
+  const [drawer, setDrawer] = useState(false);
+  const [collapsed, setCollapsed] = useStickyState('rb-nav-collapsed', false);
   const [menu, setMenu] = useState(false);
+  const [palette, setPalette] = useState(false);
   const [theme, setTheme] = useTheme();
   const location = useLocation();
   const navigate = useNavigate();
-  const menuRef = useClickAway(() => setMenu(false));
+  const menuRef = useClickAway(useCallback(() => setMenu(false), []));
 
-  useEffect(() => { setOpen(false); }, [location.pathname]);
+  useEffect(() => { setDrawer(false); setMenu(false); }, [location.pathname]);
 
-  const visible = (item) => !item.show || item.show(user);
+  const groups = useMemo(
+    () => NAV.map((g) => ({ ...g, items: g.items.filter((i) => !i.show || i.show(user)) }))
+      .filter((g) => g.items.length),
+    [user],
+  );
 
-  const current = NAV.flatMap((g) => g.items).find(
+  const flat = useMemo(
+    () => groups.flatMap((g) => g.items.map((i) => ({ ...i, group: g.group || 'General' }))),
+    [groups],
+  );
+
+  const current = flat.find(
     (i) => i.to === location.pathname || (i.to !== '/' && location.pathname.startsWith(i.to)),
   );
 
-  return (
-    <div className="shell">
-      {open && <div className="scrim" onClick={() => setOpen(false)} />}
+  const thumbs = useMemo(() => {
+    const byPath = Object.fromEntries(flat.map((i) => [i.to, i]));
+    return THUMB_ORDER.map((p) => byPath[p]).filter(Boolean).slice(0, 4);
+  }, [flat]);
 
-      <aside className={`sidebar ${open ? 'open' : ''}`}>
+  // Cmd/Ctrl+K opens "go to". Escape is handled inside the palette.
+  useEffect(() => {
+    const onKey = (e) => {
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
+        e.preventDefault();
+        setPalette((v) => !v);
+      }
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, []);
+
+  const isDark = theme === 'dark';
+
+  return (
+    <div className={`shell ${collapsed ? 'collapsed' : ''}`}>
+      {drawer && <div className="scrim" onClick={() => setDrawer(false)} />}
+
+      <aside className={`sidebar ${drawer ? 'open' : ''} ${collapsed ? 'collapsed' : ''}`}>
         <div className="sidebar-brand">
           <span className="brand-mark">R</span>
-          <div>
-            <div className="brand-name">Rockbreakers</div>
-            <div className="brand-sub">Field Service</div>
-          </div>
-        </div>
-
-        <nav className="sidebar-nav">
-          {NAV.map((group, gi) => {
-            const items = group.items.filter(visible);
-            if (!items.length) return null;
-            return (
-              <div key={gi}>
-                {group.group && <div className="nav-group-label">{group.group}</div>}
-                {items.map((item) => (
-                  <NavLink key={item.to} to={item.to} end={item.end}
-                    className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
-                    <Icon name={item.icon} size={16} />
-                    {item.label}
-                  </NavLink>
-                ))}
-              </div>
-            );
-          })}
-        </nav>
-
-        <div className="sidebar-foot" ref={menuRef} style={{ position: 'relative' }}>
-          {menu && (
-            <div className="card" style={{
-              position: 'absolute', bottom: 'calc(100% + 6px)', left: 'var(--s3)', right: 'var(--s3)',
-              boxShadow: 'var(--shadow)', zIndex: 10, padding: 'var(--s1)',
-            }}>
-              <button className="nav-item" style={{ color: 'var(--text)', width: '100%' }}
-                onClick={() => { setMenu(false); navigate('/profile'); }}>
-                <Icon name="user" size={15} /> My profile
-              </button>
-              <button className="nav-item" style={{ color: 'var(--bad)', width: '100%' }}
-                onClick={() => { setMenu(false); logout(); }}>
-                <Icon name="logout" size={15} /> Sign out
-              </button>
+          {!collapsed && (
+            <div className="brand-text">
+              <div className="brand-name">Rockbreakers</div>
+              <div className="brand-sub">Field Service</div>
             </div>
           )}
-          <button className="side-user" onClick={() => setMenu((v) => !v)}>
-            <Avatar name={user?.name} accent />
-            <div className="grow truncate">
-              <div className="side-user-name truncate">{user?.name}</div>
-              <div className="side-user-role truncate">{user?.role?.name}</div>
+        </div>
+
+        <nav className="sidebar-nav" aria-label="Sections">
+          {groups.map((group, gi) => (
+            <div className="nav-group" key={group.group || gi}>
+              {group.group && <div className="nav-group-label">{group.group}</div>}
+              {group.items.map((item) => (
+                <NavLink
+                  key={item.to} to={item.to} end={item.end} data-label={item.label}
+                  className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}
+                >
+                  <Icon name={item.icon} size={16} />
+                  <span className="nav-item-label">{item.label}</span>
+                </NavLink>
+              ))}
             </div>
-            <Icon name="chevronDown" size={14} style={{ color: '#596170' }} />
+          ))}
+        </nav>
+
+        <div className="sidebar-foot">
+          <button
+            className="side-collapse"
+            onClick={() => setCollapsed((v) => !v)}
+            aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+          >
+            <Icon name={collapsed ? 'expand' : 'collapse'} size={16} />
+            <span>Collapse</span>
           </button>
         </div>
       </aside>
 
       <div className="main">
         <header className="topbar">
-          <button className="icon-btn menu-toggle" onClick={() => setOpen(true)} aria-label="Open navigation">
-            <Icon name="menu" size={18} />
+          <button className="icon-btn menu-toggle" onClick={() => setDrawer(true)} aria-label="Open navigation">
+            <Icon name="menu" size={20} />
           </button>
-          <span className="strong only-mobile">{current?.label || 'Rockbreakers'}</span>
+
+          <nav className="crumbs hide-mobile" aria-label="Breadcrumb">
+            <Link to="/">Rockbreakers</Link>
+            <span className="sep">/</span>
+            {current?.group && current.group !== 'General' && (
+              <>
+                <span>{current.group}</span>
+                <span className="sep">/</span>
+              </>
+            )}
+            <span className="current">{current?.label || 'Not found'}</span>
+          </nav>
+
+          <span className="strong only-mobile truncate" style={{ fontSize: 'var(--text-base)' }}>
+            {current?.label || 'Rockbreakers'}
+          </span>
+
           <div className="grow" />
+
+          <button className="go-to hide-mobile" onClick={() => setPalette(true)}>
+            <Icon name="search" size={15} />
+            <span className="grow">Go to…</span>
+            <span className="kbd">Ctrl K</span>
+          </button>
+
           <IconButton
-            icon={theme === 'dark' ? 'sun' : 'moon'}
-            label={theme === 'dark' ? 'Switch to light theme' : 'Switch to dark theme'}
-            onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+            icon="search" label="Go to section" className="touch-only"
+            onClick={() => setPalette(true)}
           />
+
+          <IconButton
+            icon={isDark ? 'sun' : 'moon'}
+            label={isDark ? 'Switch to light theme' : 'Switch to dark theme'}
+            onClick={() => setTheme(isDark ? 'light' : 'dark')}
+          />
+
+          <div ref={menuRef} style={{ position: 'relative' }}>
+            <button className="topbar-user" onClick={() => setMenu((v) => !v)} aria-expanded={menu}>
+              <Avatar name={user?.name} accent />
+              <span className="hide-mobile" style={{ textAlign: 'left' }}>
+                <span className="topbar-user-name" style={{ display: 'block' }}>{user?.name}</span>
+                <span className="topbar-user-role">{user?.role?.name}</span>
+              </span>
+              <Icon name="chevronDown" size={14} className="hide-mobile" />
+            </button>
+
+            {menu && (
+              <div className="popover" role="menu">
+                <div className="popover-head">
+                  <div className="strong" style={{ fontSize: 'var(--text-sm)' }}>{user?.name}</div>
+                  <div className="xs subtle truncate">{user?.email}</div>
+                </div>
+                <button className="popover-item" role="menuitem" onClick={() => navigate('/profile')}>
+                  <Icon name="user" size={15} /> My profile
+                </button>
+                <button className="popover-item" role="menuitem"
+                  onClick={() => setTheme(theme === 'system' ? 'light' : theme === 'light' ? 'dark' : 'system')}>
+                  <Icon name={isDark ? 'sun' : 'moon'} size={15} />
+                  Theme: {theme === 'system' ? 'System' : theme === 'dark' ? 'Dark' : 'Light'}
+                </button>
+                <button className="popover-item danger" role="menuitem" onClick={logout}>
+                  <Icon name="logout" size={15} /> Sign out
+                </button>
+              </div>
+            )}
+          </div>
         </header>
+
         <main className="page">{children}</main>
+      </div>
+
+      <nav className="bottom-nav" aria-label="Primary">
+        {thumbs.map((item) => {
+          const active = item.to === '/'
+            ? location.pathname === '/'
+            : location.pathname.startsWith(item.to);
+          return (
+            <button
+              key={item.to}
+              className={`bottom-nav-item ${active ? 'active' : ''}`}
+              onClick={() => navigate(item.to)}
+              aria-current={active ? 'page' : undefined}
+            >
+              <Icon name={item.icon} size={19} />
+              <span>{item.label === 'Work calendar' ? 'Calendar' : item.label}</span>
+            </button>
+          );
+        })}
+        <button className="bottom-nav-item" onClick={() => setDrawer(true)} aria-label="More sections">
+          <Icon name="menu" size={19} />
+          <span>More</span>
+        </button>
+      </nav>
+
+      {palette && <Palette items={flat} onClose={() => setPalette(false)} />}
+    </div>
+  );
+}
+
+/**
+ * Go-to palette. It moves between sections — it does not search records, and
+ * is labelled so it does not imply otherwise.
+ */
+function Palette({ items, onClose }) {
+  const navigate = useNavigate();
+  const [q, setQ] = useState('');
+  const [sel, setSel] = useState(0);
+  const inputRef = useRef(null);
+
+  useEffect(() => { inputRef.current?.focus(); }, []);
+
+  const results = useMemo(() => {
+    const needle = q.trim().toLowerCase();
+    if (!needle) return items;
+    return items.filter((i) =>
+      i.label.toLowerCase().includes(needle) || i.group.toLowerCase().includes(needle));
+  }, [items, q]);
+
+  useEffect(() => { setSel(0); }, [q]);
+
+  const go = (item) => { if (item) { navigate(item.to); onClose(); } };
+
+  const onKey = (e) => {
+    if (e.key === 'Escape') { onClose(); return; }
+    if (e.key === 'ArrowDown') { e.preventDefault(); setSel((s) => Math.min(s + 1, results.length - 1)); }
+    if (e.key === 'ArrowUp') { e.preventDefault(); setSel((s) => Math.max(s - 1, 0)); }
+    if (e.key === 'Enter') { e.preventDefault(); go(results[sel]); }
+  };
+
+  return (
+    <div className="palette-overlay" onMouseDown={(e) => e.target === e.currentTarget && onClose()}>
+      <div className="palette" role="dialog" aria-modal="true" aria-label="Go to section">
+        <div className="palette-input">
+          <Icon name="search" size={17} style={{ color: 'var(--text-subtle)' }} />
+          <input
+            ref={inputRef} value={q} onChange={(e) => setQ(e.target.value)} onKeyDown={onKey}
+            placeholder="Go to a section…" aria-label="Go to a section"
+          />
+          <span className="kbd">Esc</span>
+        </div>
+
+        <div className="palette-list" role="listbox">
+          {results.length ? results.map((item, i) => (
+            <button
+              key={item.to} className="palette-item" role="option" aria-selected={i === sel}
+              onMouseEnter={() => setSel(i)} onClick={() => go(item)}
+            >
+              <Icon name={item.icon} size={16} />
+              {item.label}
+              <span className="group">{item.group}</span>
+            </button>
+          )) : (
+            <div className="small muted" style={{ padding: 'var(--sp-4)' }}>
+              No section matches “{q}”.
+            </div>
+          )}
+        </div>
+
+        <div className="palette-foot">
+          <span><span className="kbd">↑↓</span> move</span>
+          <span><span className="kbd">↵</span> open</span>
+          <span className="right">Sections only — this does not search records</span>
+        </div>
       </div>
     </div>
   );

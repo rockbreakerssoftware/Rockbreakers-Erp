@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { Fragment, useEffect, useMemo, useState } from 'react';
 import { api } from '../lib/api';
 import {
   Card, Button, Search, Select, Pill, Empty, Skeleton, Stat, Avatar, Banner, useToast,
@@ -181,8 +181,8 @@ export default function Payroll() {
                 {rows.map((r) => {
                   const expanded = open === r.user._id;
                   return (
-                    <>
-                      <tr key={r.user._id} className="clickable"
+                    <Fragment key={r.user._id}>
+                      <tr className="clickable"
                         onClick={() => setOpen(expanded ? null : r.user._id)}>
                         <td>
                           <div className="row" style={{ gap: 'var(--s2)' }}>
@@ -218,13 +218,13 @@ export default function Payroll() {
                         </td>
                       </tr>
                       {expanded && (
-                        <tr key={`${r.user._id}-detail`}>
+                        <tr>
                           <td colSpan={11} style={{ padding: 0, background: 'var(--surface-2)', height: 'auto' }}>
                             <DailyDetail row={r} />
                           </td>
                         </tr>
                       )}
-                    </>
+                    </Fragment>
                   );
                 })}
               </tbody>

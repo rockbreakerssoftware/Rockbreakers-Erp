@@ -13,9 +13,9 @@ export function Button({ variant = '', size = '', icon, children, loading, class
   );
 }
 
-export function IconButton({ icon, label, size = 16, ...rest }) {
+export function IconButton({ icon, label, size = 16, className = '', ...rest }) {
   return (
-    <button className="icon-btn" aria-label={label} title={label} {...rest}>
+    <button className={`icon-btn ${className}`.trim()} aria-label={label} title={label} {...rest}>
       <Icon name={icon} size={size} />
     </button>
   );
