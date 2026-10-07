@@ -1,158 +1,311 @@
 /*
- * Design tokens.
+ * Design tokens — the single source of truth.
  *
- * The look is industrial-operations software: dense, high-contrast, 1px
- * borders carrying the layout rather than shadows, and exactly one accent
- * colour reserved for the primary action. Status colours are muted and
- * semantic — they are read at a glance in a table, not admired.
+ * Direction: industrial operations software. Warm neutrals rather than the
+ * blue-grey default, one utilitarian accent (safety amber) reserved for the
+ * primary action and active navigation, and status colours that are muted
+ * enough to sit in a dense table without shouting.
+ *
+ * Rules this file encodes:
+ *   - every colour in the app comes from here, nothing is written inline
+ *   - spacing is a strict 4px grid
+ *   - three radii, three elevations, three durations
+ *   - light and dark are both first-class, and both meet WCAG AA for text
  */
 
 :root {
-  /* --- neutrals (warm, not blue-grey) --- */
-  --ink-900: #14161a;
-  --ink-800: #1c1f24;
-  --ink-700: #2a2e35;
-  --ink-600: #40454e;
-  --ink-500: #5c626c;
-  --ink-400: #858b95;
-  --ink-300: #adb2bb;
-  --ink-200: #d4d7dc;
-  --ink-100: #e8eaed;
-  --ink-50:  #f4f5f7;
-  --white:   #ffffff;
+  /* ---------------------------------------------------- neutral ramp --- */
+  /* Warm grey: hue drifts slightly to the red end, never to blue.          */
+  --n-0:    #ffffff;
+  --n-25:   #fafafa;
+  --n-50:   #f5f5f4;
+  --n-100:  #ebebe9;
+  --n-200:  #dededa;
+  --n-300:  #c4c4bf;
+  --n-400:  #9a9a94;
+  --n-500:  #76766f;
+  --n-600:  #585852;
+  --n-700:  #41413c;
+  --n-800:  #2b2b27;
+  --n-900:  #1c1c19;
+  --n-950:  #121210;
+  --n-1000: #0a0a09;
 
-  /* --- surfaces --- */
-  --bg:          #f4f5f7;
-  --surface:     #ffffff;
-  --surface-2:   #fafbfc;
-  --surface-3:   #f0f1f4;
-  --sidebar-bg:  #14161a;
-  --sidebar-fg:  #9aa0ab;
-  --sidebar-fg-active: #ffffff;
-  --sidebar-hover: #22262d;
+  /* ------------------------------------------------------- brand ------ */
+  /* Safety amber. Used only for: primary action, active nav, focus ring.  */
+  --brand-50:  #fef6e9;
+  --brand-100: #fce9ca;
+  --brand-200: #f8d08d;
+  --brand-300: #f2b24f;
+  --brand-400: #e89627;
+  --brand-500: #d97706;
+  --brand-600: #b45309;
+  --brand-700: #8f400a;
+  --brand-800: #6b300b;
+  --brand-900: #44200a;
 
-  /* --- text --- */
-  --text:        #14161a;
-  --text-muted:  #5c626c;
-  --text-subtle: #858b95;
-  --text-invert: #ffffff;
+  /* --------------------------------------------------- type scale ----- */
+  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+  --font-mono: ui-monospace, 'SF Mono', 'Cascadia Mono', Menlo, monospace;
 
-  /* --- borders --- */
-  --border:        #e2e4e8;
-  --border-strong: #cdd1d7;
-  --border-focus:  #d97706;
+  --text-xs:   12px;   /* table headers, meta, legends */
+  --text-sm:   13px;   /* secondary body, dense tables */
+  --text-base: 14px;   /* body default */
+  --text-md:   16px;   /* card titles, modal titles */
+  --text-lg:   20px;   /* page titles */
+  --text-xl:   24px;   /* KPI values */
+  --text-2xl:  32px;   /* hero KPI, login heading */
 
-  /* --- the single accent: safety amber --- */
-  --accent:        #d97706;
-  --accent-hover:  #b45309;
-  --accent-soft:   #fef3e2;
-  --accent-text:   #92400e;
+  --leading-tight: 1.25;
+  --leading-snug:  1.4;
+  --leading-base:  1.5;
 
-  /* --- semantic status --- */
-  --ok:        #15803d;
-  --ok-soft:   #e7f5ec;
-  --warn:      #b45309;
-  --warn-soft: #fdf2e3;
-  --bad:       #b91c1c;
-  --bad-soft:  #fdeceb;
-  --info:      #1d4ed8;
-  --info-soft: #eaeffb;
-  --neutral-soft: #eef0f3;
+  --tracking-tight:  -0.018em;  /* 24px and up */
+  --tracking-snug:   -0.011em;  /* 16–20px */
+  --tracking-normal: 0;
+  --tracking-wide:   0.06em;    /* uppercase labels only */
 
-  /* --- type --- */
-  --font: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
-  --mono: ui-monospace, 'SF Mono', 'Cascadia Mono', Menlo, monospace;
-  --fs-xs: 11px;
-  --fs-sm: 12px;
-  --fs-md: 13px;
-  --fs-base: 14px;
-  --fs-lg: 16px;
-  --fs-xl: 20px;
-  --fs-2xl: 28px;
+  --weight-normal: 400;
+  --weight-medium: 500;
+  --weight-semi:   600;
 
-  /* --- spacing: 4px base --- */
-  --s1: 4px;  --s2: 8px;  --s3: 12px; --s4: 16px;
-  --s5: 20px; --s6: 24px; --s8: 32px; --s10: 40px; --s12: 48px;
+  /* ----------------------------------------------------- spacing ------ */
+  /* 4px grid. No arbitrary values anywhere in the app.                    */
+  --sp-1:  4px;
+  --sp-2:  8px;
+  --sp-3:  12px;
+  --sp-4:  16px;
+  --sp-5:  20px;
+  --sp-6:  24px;
+  --sp-8:  32px;
+  --sp-10: 40px;
+  --sp-12: 48px;
+  --sp-16: 64px;
 
-  /* --- geometry --- */
-  --r-sm: 4px;
-  --r:    6px;
-  --r-lg: 8px;
-  --row-h: 36px;
-  --sidebar-w: 236px;
+  /* ---------------------------------------------------- geometry ------ */
+  --radius-sm: 6px;
+  --radius:    8px;
+  --radius-lg: 12px;
+  --radius-full: 999px;
+
+  --control-sm: 28px;
+  --control:    34px;
+  --control-lg: 40px;
+  --control-touch: 44px;   /* minimum on touch devices */
+  --row-h: 40px;
+
+  --sidebar-w: 240px;
+  --sidebar-w-collapsed: 64px;
   --topbar-h: 56px;
+  --bottombar-h: 56px;
   --content-max: 1480px;
 
-  /* one shadow level, overlays only */
-  --shadow: 0 4px 16px rgba(20, 22, 26, 0.10), 0 1px 3px rgba(20, 22, 26, 0.06);
-  --shadow-sm: 0 1px 2px rgba(20, 22, 26, 0.06);
+  /* ------------------------------------------------------ motion ------ */
+  --ease: cubic-bezier(0.2, 0, 0.2, 1);
+  --ease-out: cubic-bezier(0, 0, 0.2, 1);
+  --dur-fast: 120ms;
+  --dur:      160ms;
+  --dur-slow: 200ms;
 
-  --t: 140ms cubic-bezier(0.4, 0, 0.2, 1);
+  /* ===================================================================== */
+  /* LIGHT THEME                                                           */
+  /* ===================================================================== */
+
+  /* Surfaces, lowest to highest. Page sits below cards; cards below overlays. */
+  --bg:         var(--n-50);
+  --surface:    var(--n-0);
+  --surface-2:  var(--n-25);
+  --surface-3:  var(--n-100);
+  --surface-inset: var(--n-50);
+  --overlay-bg: rgba(18, 18, 16, 0.45);
+
+  /* Text. body on --surface is 15.1:1, muted 5.9:1, subtle 4.6:1 — all AA. */
+  --text:        var(--n-900);
+  --text-muted:  var(--n-600);
+  --text-subtle: var(--n-500);
+  --text-invert: var(--n-0);
+
+  --border:        var(--n-200);
+  --border-strong: var(--n-300);
+  --border-subtle: var(--n-100);
+
+  /* Two accents, because a fill that carries text and a marker that carries
+     none have different contrast duties. --accent is the brand hue, used for
+     indicators, active bars, focus rings and chart marks (3:1 non-text).
+     --accent-solid is the interactive fill behind white label text (4.5:1):
+     white on brand-500 is only 3.19:1, so the fill steps one stop darker. */
+  --accent:        var(--brand-500);
+  --accent-solid:       var(--brand-600);   /* white on this = 5.02:1 */
+  --accent-solid-hover: #a34a08;            /* white on this = 5.93:1 */
+  --accent-solid-active: var(--brand-700);
+  --accent-fg:     #ffffff;
+  --accent-hover:  var(--brand-600);
+  --accent-active: var(--brand-700);
+  --accent-bg:     var(--brand-50);
+  --accent-border: var(--brand-200);
+  --accent-text:   var(--brand-700);
+
+  /* Status. -text meets AA on its own -bg and on --surface. */
+  --ok-text:   #13742f;  --ok-bg:   #e8f5ec;  --ok-border:   #bbe3c8;  --ok-solid:   #16a34a;
+  --warn-text: #92540a;  --warn-bg: #fdf3e3;  --warn-border: #f5dcb0;  --warn-solid: #d97706;
+  --bad-text:  #b4201c;  --bad-bg:  #fdeceb;  --bad-border:  #f6c9c6;  --bad-solid:  #dc2626;
+  --info-text: #1d4ed8;  --info-bg: #eaeffb;  --info-border: #c6d4f7;  --info-solid: #2563eb;
+  --neutral-bg: var(--n-100);
+  --neutral-text: var(--n-600);
+
+  /* Sidebar is always the dark surface, in both themes. */
+  --nav-bg:        var(--n-950);
+  --nav-fg:        #a3a39b;
+  --nav-fg-active: #ffffff;
+  --nav-hover:     #222220;
+  --nav-border:    rgba(255, 255, 255, 0.07);
+  --nav-label:     #6b6b63;
+
+  /* Elevation. Borders carry the layout; shadows are for overlays only. */
+  --shadow-sm: 0 1px 2px rgba(18, 18, 16, 0.06);
+  --shadow:    0 2px 4px rgba(18, 18, 16, 0.06), 0 4px 12px rgba(18, 18, 16, 0.08);
+  --shadow-lg: 0 8px 16px rgba(18, 18, 16, 0.08), 0 16px 40px rgba(18, 18, 16, 0.12);
+
+  --focus-ring: 0 0 0 2px var(--surface), 0 0 0 4px var(--brand-400);
+  --focus-ring-tight: 0 0 0 3px var(--accent-bg);
 }
 
-/* Dark mode follows the OS, and the manual toggle overrides it either way. */
+/* ======================================================================= */
+/* DARK THEME                                                              */
+/* Layered surfaces, not flat black: each level steps up in lightness so    */
+/* cards, popovers and modals read as physically stacked.                   */
+/* ======================================================================= */
+
+:root[data-theme='dark'] {
+  --bg:         var(--n-1000);
+  --surface:    #141412;
+  --surface-2:  #1b1b18;
+  --surface-3:  #232320;
+  --surface-inset: #0f0f0e;
+  --overlay-bg: rgba(0, 0, 0, 0.6);
+
+  --text:        #ededea;
+  --text-muted:  #a3a39b;
+  --text-subtle: #7d7d76;
+  --text-invert: var(--n-950);
+
+  --border:        #2c2c28;
+  --border-strong: #3d3d38;
+  --border-subtle: #222220;
+
+  --accent:        var(--brand-500);
+  --accent-solid:       var(--brand-500);   /* ink on this = 5.36:1 */
+  --accent-solid-hover: var(--brand-400);
+  --accent-solid-active: var(--brand-300);
+  --accent-fg:     #1c1c19;
+  --accent-hover:  var(--brand-400);
+  --accent-active: var(--brand-300);
+  --accent-bg:     #2a1e0a;
+  --accent-border: #4d3510;
+  --accent-text:   var(--brand-300);
+
+  /* Lightened so each clears 4.5:1 on the dark surface. */
+  --ok-text:   #5dd48a;  --ok-bg:   #10231a;  --ok-border:   #1d4532;  --ok-solid:   #22c55e;
+  --warn-text: #f0b44c;  --warn-bg: #261a08;  --warn-border: #4a3410;  --warn-solid: #e89627;
+  --bad-text:  #f58a84;  --bad-bg:  #2a1413;  --bad-border:  #512522;  --bad-solid:  #ef4444;
+  --info-text: #8fb0f7;  --info-bg: #111a2e;  --info-border: #22345c;  --info-solid: #3b82f6;
+  --neutral-bg: #232320;
+  --neutral-text: #a3a39b;
+
+  --nav-bg:     #0d0d0c;
+  --nav-hover:  #1b1b18;
+  --nav-border: rgba(255, 255, 255, 0.06);
+
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
+  --shadow:    0 2px 4px rgba(0, 0, 0, 0.4), 0 4px 12px rgba(0, 0, 0, 0.5);
+  --shadow-lg: 0 8px 16px rgba(0, 0, 0, 0.5), 0 16px 40px rgba(0, 0, 0, 0.6);
+
+  --focus-ring: 0 0 0 2px var(--surface), 0 0 0 4px var(--brand-400);
+  --focus-ring-tight: 0 0 0 3px var(--accent-bg);
+}
+
+/* Same values when the OS asks for dark and the user has not overridden. */
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme='light']) {
-    --bg:        #0f1114;
-    --surface:   #16191e;
-    --surface-2: #1b1f25;
-    --surface-3: #22262d;
-    --sidebar-bg: #0a0b0d;
-    --sidebar-hover: #1b1f25;
+    --bg:         var(--n-1000);
+    --surface:    #141412;
+    --surface-2:  #1b1b18;
+    --surface-3:  #232320;
+    --surface-inset: #0f0f0e;
+    --overlay-bg: rgba(0, 0, 0, 0.6);
 
-    --text:        #e8eaed;
-    --text-muted:  #9aa0ab;
-    --text-subtle: #6e747e;
+    --text:        #ededea;
+    --text-muted:  #a3a39b;
+    --text-subtle: #7d7d76;
+    --text-invert: var(--n-950);
 
-    --border:        #272b32;
-    --border-strong: #363b44;
+    --border:        #2c2c28;
+    --border-strong: #3d3d38;
+    --border-subtle: #222220;
 
-    --accent-soft: #2e2008;
-    --accent-text: #fbbf24;
+    --accent-solid:       var(--brand-500);
+    --accent-solid-hover: var(--brand-400);
+    --accent-solid-active: var(--brand-300);
+    --accent-hover:  var(--brand-400);
+    --accent-active: var(--brand-300);
+    --accent-fg:     #1c1c19;
+    --accent-bg:     #2a1e0a;
+    --accent-border: #4d3510;
+    --accent-text:   var(--brand-300);
 
-    --ok-soft:   #0f2318;
-    --warn-soft: #2a1d08;
-    --bad-soft:  #2b1313;
-    --info-soft: #111c33;
-    --neutral-soft: #22262d;
-    --ok:   #4ade80;
-    --warn: #fbbf24;
-    --bad:  #f87171;
-    --info: #93b4fd;
+    --ok-text:   #5dd48a;  --ok-bg:   #10231a;  --ok-border:   #1d4532;  --ok-solid:   #22c55e;
+    --warn-text: #f0b44c;  --warn-bg: #261a08;  --warn-border: #4a3410;  --warn-solid: #e89627;
+    --bad-text:  #f58a84;  --bad-bg:  #2a1413;  --bad-border:  #512522;  --bad-solid:  #ef4444;
+    --info-text: #8fb0f7;  --info-bg: #111a2e;  --info-border: #22345c;  --info-solid: #3b82f6;
+    --neutral-bg: #232320;
+    --neutral-text: #a3a39b;
 
-    --shadow: 0 4px 20px rgba(0, 0, 0, 0.5), 0 1px 3px rgba(0, 0, 0, 0.3);
-    --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
+    --nav-bg:     #0d0d0c;
+    --nav-hover:  #1b1b18;
+    --nav-border: rgba(255, 255, 255, 0.06);
+
+    --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
+    --shadow:    0 2px 4px rgba(0, 0, 0, 0.4), 0 4px 12px rgba(0, 0, 0, 0.5);
+    --shadow-lg: 0 8px 16px rgba(0, 0, 0, 0.5), 0 16px 40px rgba(0, 0, 0, 0.6);
   }
 }
 
-:root[data-theme='dark'] {
-  --bg:        #0f1114;
-  --surface:   #16191e;
-  --surface-2: #1b1f25;
-  --surface-3: #22262d;
-  --sidebar-bg: #0a0b0d;
-  --sidebar-hover: #1b1f25;
+/* ======================================================================= */
+/* Legacy aliases.                                                         */
+/* The redesign migrates file by file; these keep unmigrated styles correct */
+/* in the meantime and are deleted once nothing references them.           */
+/* ======================================================================= */
 
-  --text:        #e8eaed;
-  --text-muted:  #9aa0ab;
-  --text-subtle: #6e747e;
+:root {
+  --ink-900: var(--n-900);  --ink-800: var(--n-800);  --ink-700: var(--n-700);
+  --ink-600: var(--n-600);  --ink-500: var(--n-500);  --ink-400: var(--n-400);
+  --ink-300: var(--n-300);  --ink-200: var(--n-200);  --ink-100: var(--n-100);
+  --ink-50:  var(--n-50);   --white:   var(--n-0);
 
-  --border:        #272b32;
-  --border-strong: #363b44;
+  --sidebar-bg: var(--nav-bg);
+  --sidebar-fg: var(--nav-fg);
+  --sidebar-fg-active: var(--nav-fg-active);
+  --sidebar-hover: var(--nav-hover);
 
-  --accent-soft: #2e2008;
-  --accent-text: #fbbf24;
+  --border-focus: var(--accent);
+  --accent-soft: var(--accent-bg);
 
-  --ok-soft:   #0f2318;
-  --warn-soft: #2a1d08;
-  --bad-soft:  #2b1313;
-  --info-soft: #111c33;
-  --neutral-soft: #22262d;
-  --ok:   #4ade80;
-  --warn: #fbbf24;
-  --bad:  #f87171;
-  --info: #93b4fd;
+  --ok: var(--ok-text);      --ok-soft: var(--ok-bg);
+  --warn: var(--warn-text);  --warn-soft: var(--warn-bg);
+  --bad: var(--bad-text);    --bad-soft: var(--bad-bg);
+  --info: var(--info-text);  --info-soft: var(--info-bg);
+  --neutral-soft: var(--neutral-bg);
 
-  --shadow: 0 4px 20px rgba(0, 0, 0, 0.5), 0 1px 3px rgba(0, 0, 0, 0.3);
-  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
+  --font: var(--font-sans);
+  --mono: var(--font-mono);
+  --fs-xs: var(--text-xs);   --fs-sm: var(--text-sm);   --fs-md: var(--text-sm);
+  --fs-base: var(--text-base); --fs-lg: var(--text-md);
+  --fs-xl: var(--text-lg);   --fs-2xl: var(--text-xl);
+
+  --s1: var(--sp-1);  --s2: var(--sp-2);  --s3: var(--sp-3);  --s4: var(--sp-4);
+  --s5: var(--sp-5);  --s6: var(--sp-6);  --s8: var(--sp-8);  --s10: var(--sp-10);
+  --s12: var(--sp-12);
+
+  --r-sm: var(--radius-sm);  --r: var(--radius);  --r-lg: var(--radius-lg);
+  --t: var(--dur) var(--ease);
 }

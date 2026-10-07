@@ -58,7 +58,7 @@
 .cal-date { font-size: var(--fs-sm); font-weight: 600; color: var(--text-muted); display: flex; align-items: center; gap: var(--s1); }
 .cal-cell.out .cal-date { color: var(--text-subtle); font-weight: 400; }
 .cal-cell.today .cal-date { color: var(--accent-text); }
-.cal-date .today-dot { width: 18px; height: 18px; border-radius: 50%; background: var(--accent); color: #fff; display: grid; place-items: center; font-size: 10px; font-weight: 700; }
+.cal-date .today-dot { width: 18px; height: 18px; border-radius: 50%; background: var(--accent-solid); color: var(--accent-fg); display: grid; place-items: center; font-size: 10px; font-weight: 700; }
 .cal-holiday { font-size: var(--fs-xs); color: var(--bad); font-weight: 500; }
 
 .cal-chip {
