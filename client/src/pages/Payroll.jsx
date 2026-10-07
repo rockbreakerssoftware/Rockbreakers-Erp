@@ -8,13 +8,20 @@ import { fmtTime, fmtDate } from '../lib/format';
 
 const DOW = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
+/*
+ * `tone` drives the pill. `ribbon` drives the month strip, and they are not
+ * the same thing on purpose: the strip paints every day of the month, so a
+ * quiet month would otherwise be a solid wall of alarm red for days where
+ * simply nothing happened. Absence is the quietest mark on the strip; red is
+ * kept for a day that contradicts itself.
+ */
 const STATUS = {
-  PRESENT: { label: 'Present', tone: 'ok', short: 'P' },
-  PRESENT_NO_CHECKOUT: { label: 'No check-out', tone: 'warn', short: 'P' },
-  LEAVE: { label: 'Leave', tone: 'info', short: 'L' },
-  HOLIDAY: { label: 'Holiday', tone: '', short: 'H' },
-  SITE_ONLY: { label: 'On site, day not marked', tone: 'warn', short: 'S' },
-  NO_RECORD: { label: 'No record', tone: 'bad', short: '—' },
+  PRESENT: { label: 'Present', tone: 'ok', ribbon: 'present' },
+  PRESENT_NO_CHECKOUT: { label: 'No check-out', tone: 'warn', ribbon: 'partial' },
+  LEAVE: { label: 'Leave', tone: 'info', ribbon: 'leave' },
+  HOLIDAY: { label: 'Holiday', tone: '', ribbon: 'holiday' },
+  SITE_ONLY: { label: 'On site, day not marked', tone: 'warn', ribbon: 'partial' },
+  NO_RECORD: { label: 'No record', tone: '', ribbon: 'none' },
 };
 
 const monthKey = (d = new Date()) =>
@@ -131,6 +138,11 @@ export default function Payroll() {
             onChange={(e) => setMonth(e.target.value)} style={{ width: 160 }} />
           <Button size="sm" icon="chevronRight" onClick={() => shiftMonth(1)}
             disabled={isCurrentMonth} aria-label="Next month" />
+          {isCurrentMonth && (
+            <span className="xs subtle" style={{ marginLeft: 'var(--sp-2)' }}>
+              Month still running — days ahead of today have no record yet
+            </span>
+          )}
           {!data && <span className="spinner" style={{ marginLeft: 8 }} />}
         </div>
         <div className="row wrap" style={{ gap: 'var(--s2)' }}>
@@ -140,21 +152,14 @@ export default function Payroll() {
         </div>
       </div>
 
-      {isCurrentMonth && (
-        <div style={{ marginBottom: 'var(--s4)' }}>
-          <Banner tone="warn" icon="alert">
-            {monthLabel} is still running — days after today will show as “No record” until they happen.
-          </Banner>
-        </div>
-      )}
-
       {totals && (
         <div className="grid grid-4" style={{ marginBottom: 'var(--s5)' }}>
-          <Stat label="Employees" value={totals.people} hint={monthLabel} />
-          <Stat label="Days marked present" value={totals.present} />
-          <Stat label="Hours worked" value={totals.hours.toLocaleString('en-IN')} hint={`${totals.siteHours.toLocaleString('en-IN')} h on customer sites`} />
-          <Stat label="Days with no record" value={totals.noRecord}
-            tone={totals.noRecord ? 'warn' : 'ok'} hint={`${totals.leave} day(s) approved leave`} />
+          <Stat label="Employees" value={totals.people} hint={monthLabel} icon="users" />
+          <Stat label="Days marked present" value={totals.present} tier="lead" icon="clock" />
+          <Stat label="Hours worked" icon="chart" value={totals.hours.toLocaleString('en-IN')}
+            hint={`${totals.siteHours.toLocaleString('en-IN')} h on customer sites`} />
+          <Stat label="Days with no record" icon="calendar" value={totals.noRecord}
+            hint={`${totals.leave} day(s) approved leave`} />
         </div>
       )}
 
@@ -206,7 +211,7 @@ export default function Payroll() {
                           )}
                         </td>
                         <td className="num">
-                          {r.noRecord ? <span style={{ color: 'var(--bad)' }}>{r.noRecord}</span> : <span className="subtle">—</span>}
+                          {r.noRecord ? <span className="muted">{r.noRecord}</span> : <span className="subtle">—</span>}
                         </td>
                         <td className="num strong">{r.workedHours.toFixed(1)}</td>
                         <td className="num">{r.siteDays || <span className="subtle">—</span>}</td>
@@ -236,11 +241,9 @@ export default function Payroll() {
         )}
       </Card>
 
-      <div className="legend" style={{ marginTop: 'var(--s4)', justifyContent: 'center' }}>
+      <div className="legend strip-legend">
         {Object.entries(STATUS).map(([k, v]) => (
-          <span key={k}>
-            <i style={{ background: toneColor(v.tone) }} /> {v.label}
-          </span>
+          <span key={k}><i className={`day ${v.ribbon}`} /> {v.label}</span>
         ))}
       </div>
     </>
@@ -251,19 +254,16 @@ const toneColor = (tone) => ({
   ok: 'var(--ok)', warn: 'var(--warn)', bad: 'var(--bad)', info: 'var(--info)',
 }[tone] || 'var(--border-strong)');
 
-/** A one-square-per-day ribbon, so a month reads at a glance. */
+/** One mark per day, so a month reads at a glance without being read. */
 function MonthStrip({ daily }) {
   return (
-    <div style={{ display: 'flex', gap: 1.5 }}>
+    <div className="month-strip" role="img"
+      aria-label={`${daily.filter((d) => d.status.startsWith('PRESENT')).length} of ${daily.length} days marked present`}>
       {daily.map((d) => (
         <span
           key={d.date}
+          className={`day ${STATUS[d.status].ribbon}`}
           title={`${d.date} (${DOW[d.dow]}) — ${STATUS[d.status].label}`}
-          style={{
-            width: 4, height: 15, borderRadius: 1,
-            background: toneColor(STATUS[d.status].tone),
-            opacity: d.status === 'NO_RECORD' && d.isSunday ? 0.3 : 1,
-          }}
         />
       ))}
     </div>

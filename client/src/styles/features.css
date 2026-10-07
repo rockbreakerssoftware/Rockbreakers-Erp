@@ -229,3 +229,24 @@
 .bar-item { display: grid; grid-template-columns: 1fr auto; gap: 3px; font-size: var(--fs-md); }
 .bar-track { grid-column: span 2; height: 6px; border-radius: 3px; background: var(--surface-3); overflow: hidden; }
 .bar-fill { height: 100%; border-radius: 3px; background: var(--accent); }
+
+/* ---------------------------------------------------- month strip (payroll) */
+/*
+ * One mark per day. The marks are deliberately unequal in weight: a day with
+ * nothing recorded is the faintest thing on the row, because a quiet month is
+ * not a fault. Painting absence in red made an empty month look like an
+ * outage and buried the days that actually need a decision.
+ */
+.month-strip { display: flex; gap: 2px; align-items: center; }
+.day { width: 5px; height: 16px; border-radius: 2px; background: var(--border); flex: 0 0 auto; }
+.day.present { background: var(--ok-solid); }
+.day.partial { background: var(--warn-solid); }
+.day.leave   { background: var(--info-solid); opacity: .65; }
+.day.holiday { background: var(--border-strong); }
+.day.none    { background: var(--border); opacity: .55; }
+
+.strip-legend {
+  margin-top: var(--sp-4); justify-content: center;
+  padding: var(--sp-3); border-top: 1px solid var(--border);
+}
+.strip-legend .day { height: 12px; display: inline-block; }

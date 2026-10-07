@@ -56,7 +56,7 @@ export default function Users() {
 
   const columns = [
     {
-      key: 'name', label: 'Employee',
+      key: 'name', label: 'Employee', primary: true,
       render: (u) => (
         <div className="row" style={{ gap: 'var(--s3)' }}>
           <Avatar name={u.name} />
@@ -70,7 +70,7 @@ export default function Users() {
       ),
     },
     { key: 'role', label: 'Role', render: (u) => <Pill>{u.role?.name || '—'}</Pill> },
-    { key: 'department', label: 'Department', render: (u) => <span className="small">{u.department?.name || '—'}</span> },
+    { key: 'department', label: 'Department', hideOnMobile: true, render: (u) => <span className="small">{u.department?.name || '—'}</span> },
     { key: 'designation', label: 'Designation', render: (u) => <span className="small muted">{u.designation || '—'}</span> },
     { key: 'reportsTo', label: 'Reports to', render: (u) => <span className="small muted">{u.reportsTo?.name || '—'}</span> },
     { key: 'status', label: 'Status', render: (u) => (u.active ? <Pill tone="ok" dot>Active</Pill> : <Pill dot>Inactive</Pill>) },
@@ -100,12 +100,12 @@ export default function Users() {
     <>
       <div className="page-head">
         <div>
-          <div className="page-title">Users</div>
+          <div className="page-title">Employees</div>
           <div className="page-sub">Everyone with an account, across every department</div>
         </div>
         {can('user', 'create') && (
           <div className="page-actions">
-            <Button variant="primary" icon="plus" onClick={() => setEditing({})}>Add user</Button>
+            <Button variant="primary" icon="plus" onClick={() => setEditing({})}>Add employee</Button>
           </div>
         )}
       </div>

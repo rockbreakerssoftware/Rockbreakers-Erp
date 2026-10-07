@@ -28,6 +28,12 @@ export const statusTone = (s) => ({
 
 export const priorityTone = (p) => ({ URGENT: 'bad', HIGH: 'warn', NORMAL: '', LOW: '' }[p] ?? '');
 
+/** Work type carries its own urgency; a breakdown should not scan as a survey. */
+export const typeTone = (t) => ({
+  BREAKDOWN: 'bad', INSTALLATION: 'accent', PREVENTIVE: 'info',
+  INSPECTION: '', TRAINING: '',
+}[t] ?? '');
+
 /* ------------------------------------------------------------- dates */
 
 const pad = (n) => String(n).padStart(2, '0');

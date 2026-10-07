@@ -6,7 +6,7 @@ import {
   Button, Card, Table, Search, Select, Pill, StatusPill, AvatarStack, Empty, Skeleton, Tabs, useToast,
 } from '../components/ui';
 import JobForm from './JobForm';
-import { JOB_TYPES, fmtRange, title, priorityTone } from '../lib/format';
+import { JOB_TYPES, PRIORITIES, fmtRange, title, priorityTone, typeTone } from '../lib/format';
 
 const TABS = [
   { key: 'open', label: 'Open', statuses: 'SCHEDULED,ACCEPTED,IN_PROGRESS' },
@@ -56,12 +56,14 @@ export default function Jobs() {
         </div>
       ),
     },
-    { key: 'type', label: 'Type', render: (j) => <Pill>{title(j.type)}</Pill> },
+    // Breakdown and Inspection are very different kinds of work; identical
+    // grey pills made them scan the same.
+    { key: 'type', label: 'Type', render: (j) => <Pill tone={typeTone(j.type)}>{title(j.type)}</Pill> },
     {
-      key: 'priority', label: 'Priority',
-      render: (j) => (j.priority === 'NORMAL' || j.priority === 'LOW'
-        ? <span className="muted small">{title(j.priority)}</span>
-        : <Pill tone={priorityTone(j.priority)} dot>{title(j.priority)}</Pill>),
+      // One treatment for the whole column: mixing plain text for Normal with
+      // pills for High read as two different kinds of value.
+      key: 'priority', label: 'Priority', sortValue: (j) => PRIORITIES.indexOf(j.priority),
+      render: (j) => <Pill tone={priorityTone(j.priority)} dot>{title(j.priority)}</Pill>,
     },
     { key: 'when', label: 'Scheduled', render: (j) => <span className="small nowrap">{fmtRange(j.scheduledStart, j.scheduledEnd)}</span> },
     {
@@ -103,6 +105,8 @@ export default function Jobs() {
           <Table
             columns={columns}
             rows={rows}
+            sortable
+            pageSize={25}
             onRowClick={(j) => navigate(`/jobs/${j._id}`)}
             empty={
               <Empty

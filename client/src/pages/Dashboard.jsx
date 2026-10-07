@@ -6,6 +6,13 @@ import { Card, Stat, StatSkeleton, Empty, Button, Pill, StatusPill, Avatar, Avat
 import Icon from '../components/Icon';
 import { fmtTime, fmtRange, title, relative, money } from '../lib/format';
 
+const ICONS = {
+  my_today: 'calendar', team_today: 'users', my_open: 'briefcase',
+  attendance: 'clock', week: 'calendar', overdue: 'alert', on_hold: 'clock',
+  flagged: 'mapPin', unmarked: 'clock', expenses: 'receipt',
+  requirements: 'box', people: 'users', sites: 'map', my_expenses: 'receipt',
+};
+
 export default function Dashboard() {
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -17,10 +24,6 @@ export default function Dashboard() {
     api.get('/dashboard').then(setData).catch((e) => setError(e.message));
   }, []);
 
-  const greeting = (() => {
-    const h = new Date().getHours();
-    return h < 12 ? 'Good morning' : h < 17 ? 'Good afternoon' : 'Good evening';
-  })();
 
   if (error) return <Banner tone="bad" icon="alert">{error}</Banner>;
 
@@ -37,13 +40,44 @@ export default function Dashboard() {
   const myDay = sections.myDay || {};
   const attendanceDone = !!myDay.attendance?.checkIn?.at;
 
+  // Thirteen identical tiles told the eye nothing. The same payload is
+  // grouped into three tiers: what this role opened the page for, what is
+  // waiting on them, and context that should recede.
+  const LEAD = ['my_today', 'team_today'];
+  const REFERENCE = ['people', 'sites', 'week', 'my_open', 'on_hold'];
+
+  const shown = cards.filter((c) => {
+    // The banner above already states this and carries the action.
+    if (c.key === 'attendance' && !attendanceDone) return false;
+    return true;
+  });
+
+  const lead = shown.filter((c) => LEAD.includes(c.key));
+  const rest = shown.filter((c) => !LEAD.includes(c.key));
+
+  // Nothing at zero is waiting on anyone. "Flagged check-ins: 0" under a
+  // heading that says Needs attention is noise, so it drops to reference.
+  const needsAction = (c) => Number(c.value) > 0;
+  const attention = rest.filter((c) => !REFERENCE.includes(c.key) && needsAction(c));
+  const reference = rest.filter((c) => REFERENCE.includes(c.key) || !needsAction(c));
+
+  // A zero is not an achievement. Colour is reserved for a number that wants
+  // someone to do something about it.
+  const tile = (c) => ({
+    label: c.label,
+    value: c.value,
+    hint: c.hint,
+    tone: Number(c.value) === 0 || c.tone === 'ok' ? '' : c.tone,
+    icon: ICONS[c.key],
+  });
+
   return (
     <>
       <div className="page-head">
         <div>
-          <div className="page-title">{greeting}, {user.name.split(' ')[0]}</div>
+          <div className="page-title">Today</div>
           <div className="page-sub">
-            {new Date().toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'long' })}
+            {new Date().toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
             {' · '}{user.role?.name}
           </div>
         </div>
@@ -61,9 +95,29 @@ export default function Dashboard() {
         </div>
       )}
 
-      <div className="grid grid-4" style={{ marginBottom: 'var(--s5)' }}>
-        {cards.map((c) => <Stat key={c.key} label={c.label} value={c.value} hint={c.hint} tone={c.tone} />)}
-      </div>
+      {lead.length > 0 && (
+        <div className="grid grid-lead" style={{ marginBottom: 'var(--sp-5)' }}>
+          {lead.map((c) => <Stat key={c.key} tier="lead" {...tile(c)} />)}
+        </div>
+      )}
+
+      {attention.length > 0 && (
+        <>
+          <h2 className="section-label">Needs attention</h2>
+          <div className="grid grid-tiles" style={{ marginBottom: 'var(--sp-5)' }}>
+            {attention.map((c) => <Stat key={c.key} {...tile(c)} />)}
+          </div>
+        </>
+      )}
+
+      {reference.length > 0 && (
+        <>
+          <h2 className="section-label">Reference</h2>
+          <div className="grid grid-tiles" style={{ marginBottom: 'var(--sp-5)' }}>
+            {reference.map((c) => <Stat key={c.key} tier="quiet" {...tile(c)} />)}
+          </div>
+        </>
+      )}
 
       <div className="grid" style={{ gridTemplateColumns: sections.team ? '1.3fr 1fr' : '1fr', alignItems: 'start' }}>
         <Card
