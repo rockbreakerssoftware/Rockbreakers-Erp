@@ -52,7 +52,7 @@
 }
 .cal-cell:nth-child(7n) { border-right: 0; }
 .cal-cell.out { background: var(--surface-2); }
-.cal-cell.today { background: var(--accent-soft); }
+.cal-cell.today { background: transparent; box-shadow: inset 0 2px 0 var(--accent); }
 .cal-cell.clickable { cursor: pointer; }
 .cal-cell.clickable:hover { background: var(--surface-3); }
 .cal-date { font-size: var(--fs-sm); font-weight: 600; color: var(--text-muted); display: flex; align-items: center; gap: var(--s1); }

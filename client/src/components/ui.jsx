@@ -440,7 +440,7 @@ export function Table({
               {pairs.length > 0 && (
                 <dl className="row-card-pairs">
                   {pairs.map((c) => (
-                    <div key={c.key}>
+                    <div key={c.key} className={c.wide ? 'wide' : undefined}>
                       <dt>{c.label}</dt>
                       <dd>{c.render ? c.render(r) : r[c.key]}</dd>
                     </div>

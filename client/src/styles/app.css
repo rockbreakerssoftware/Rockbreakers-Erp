@@ -428,10 +428,12 @@
 }
 .btn-group button + button { border-left: 1px solid var(--border); }
 .btn-group button:hover { background: var(--surface-3); color: var(--text); }
-.btn-group button.on { background: var(--ink-900); color: #fff; }
-:root[data-theme='dark'] .btn-group button.on { background: var(--accent); color: #14161a; }
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme='light']) .btn-group button.on { background: var(--accent); color: #14161a; }
+.btn-group { background: var(--surface-3); padding: 2px; gap: 2px; border-color: var(--border); }
+.btn-group button { border-radius: calc(var(--radius-sm) - 2px); }
+.btn-group button + button { border-left: 0; }
+.btn-group button.on {
+  background: var(--surface); color: var(--text);
+  font-weight: var(--weight-semi); box-shadow: var(--shadow-sm);
 }
 
 /* --------------------------------------------------------------- fields */
@@ -539,8 +541,17 @@ th[aria-sort] .th-sort svg { opacity: 1; color: var(--accent); }
   gap: var(--sp-2) var(--sp-3); margin: 0;
   padding-top: var(--sp-2); border-top: 1px solid var(--border-subtle);
 }
+/* Grid children default to min-width:auto, so a long value refused to shrink
+   and spilled over the next column — the crew avatars were rendering on top
+   of the scheduled time. */
+.row-card-pairs > div { min-width: 0; }
 .row-card-pairs dt { font-size: var(--text-xs); color: var(--text-subtle); margin-bottom: 1px; }
-.row-card-pairs dd { margin: 0; font-size: var(--text-sm); }
+.row-card-pairs dd { margin: 0; font-size: var(--text-sm); min-width: 0; overflow-wrap: anywhere; }
+/* Desktop cells use .nowrap to keep a date on one line in a wide table. In a
+   narrow card that same rule made the value spill over its neighbour, so the
+   card re-enables wrapping for its own content. */
+.row-card-pairs dd, .row-card-pairs dd * { white-space: normal; }
+.row-card-pairs > div.wide { grid-column: 1 / -1; }
 .row-card-actions {
   display: flex; flex-wrap: wrap; gap: var(--sp-2);
   padding-top: var(--sp-2); border-top: 1px solid var(--border-subtle);

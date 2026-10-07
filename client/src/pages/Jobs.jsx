@@ -65,7 +65,8 @@ export default function Jobs() {
       key: 'priority', label: 'Priority', sortValue: (j) => PRIORITIES.indexOf(j.priority),
       render: (j) => <Pill tone={priorityTone(j.priority)} dot>{title(j.priority)}</Pill>,
     },
-    { key: 'when', label: 'Scheduled', render: (j) => <span className="small nowrap">{fmtRange(j.scheduledStart, j.scheduledEnd)}</span> },
+    { key: 'when', label: 'Scheduled', wide: true, sortValue: (j) => new Date(j.scheduledStart).getTime(),
+      render: (j) => <span className="small nowrap">{fmtRange(j.scheduledStart, j.scheduledEnd)}</span> },
     {
       key: 'crew', label: 'Crew',
       render: (j) => (j.assignments?.length
