@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useCallback, useEffect, useRef } from 'react';
+import { createContext, useContext, useState, useCallback, useEffect, useRef, useMemo } from 'react';
 import Icon from './Icon';
 import { initials, title, statusTone } from '../lib/format';
 
@@ -95,30 +95,52 @@ export function AvatarStack({ people = [], max = 4 }) {
 
 /* --------------------------------------------------------------- cards */
 
-export function Card({ title: t, subtitle, actions, children, bodyClass = '', className = '' }) {
+export function Card({ title: t, subtitle, actions, children, bodyClass = '', className = '', pad = true }) {
   return (
     <section className={`card ${className}`.trim()}>
       {(t || actions) && (
         <header className="card-head">
-          <div>
-            <div className="card-title">{t}</div>
-            {subtitle && <div className="small muted">{subtitle}</div>}
+          <div className="card-head-text">
+            {t && <h2 className="card-title">{t}</h2>}
+            {subtitle && <p className="card-sub">{subtitle}</p>}
           </div>
-          {actions && <div className="row">{actions}</div>}
+          {actions && <div className="row card-head-actions">{actions}</div>}
         </header>
       )}
-      <div className={`card-body ${bodyClass}`.trim()}>{children}</div>
+      <div className={`card-body ${pad ? '' : 'flush'} ${bodyClass}`.trim()}>{children}</div>
     </section>
   );
 }
 
-export function Stat({ label, value, hint, tone = '' }) {
+/**
+ * A KPI tile. `tier` gives the grid a hierarchy instead of thirteen identical
+ * boxes: "lead" is the number someone opened the page for, "default" supports
+ * it, "quiet" is reference data that should recede.
+ */
+export function Stat({ label, value, hint, tone = '', tier = 'default', trend, icon, onClick }) {
+  const Tag = onClick ? 'button' : 'div';
+  const dir = trend?.direction;
   return (
-    <div className={`stat tone-${tone}`}>
-      <span className="stat-label">{label}</span>
-      <span className={`stat-value ${typeof value === 'string' && value.length > 6 ? 'sm' : ''}`}>{value}</span>
+    <Tag
+      className={`stat tier-${tier} ${tone ? `tone-${tone}` : ''} ${onClick ? 'is-link' : ''}`.trim()}
+      onClick={onClick}
+      type={onClick ? 'button' : undefined}
+    >
+      <span className="stat-label">
+        {icon && <Icon name={icon} size={14} />}
+        {label}
+      </span>
+      <span className="stat-row">
+        <span className="stat-value">{value}</span>
+        {trend && (
+          <span className={`stat-trend ${dir || 'flat'}`}>
+            <Icon name={dir === 'up' ? 'trendUp' : dir === 'down' ? 'trendDown' : 'trendFlat'} size={13} />
+            {trend.label}
+          </span>
+        )}
+      </span>
       {hint && <span className="stat-hint">{hint}</span>}
-    </div>
+    </Tag>
   );
 }
 
@@ -197,13 +219,20 @@ export function ConfirmModal({ open, onClose, onConfirm, title: t, message, conf
 
 /* ------------------------------------------------------ empty & loading */
 
-export function Empty({ icon = 'inbox', title: t = 'Nothing here yet', text, action }) {
+/**
+ * Empty state. Compact by default — an empty list is a normal condition, not
+ * an event, and should not take 400px to say so. `size="page"` is for a whole
+ * screen with nothing in it.
+ */
+export function Empty({ icon = 'inbox', title: t = 'Nothing here yet', text, action, size = 'compact' }) {
   return (
-    <div className="empty">
-      <div className="empty-icon"><Icon name={icon} size={19} /></div>
-      <div className="empty-title">{t}</div>
-      {text && <p className="empty-text">{text}</p>}
-      {action && <div style={{ marginTop: 'var(--s2)' }}>{action}</div>}
+    <div className={`empty empty-${size}`}>
+      <span className="empty-icon"><Icon name={icon} size={size === 'page' ? 20 : 16} /></span>
+      <span className="empty-text-group">
+        <span className="empty-title">{t}</span>
+        {text && <span className="empty-text">{text}</span>}
+      </span>
+      {action && <span className="empty-action">{action}</span>}
     </div>
   );
 }
@@ -280,27 +309,167 @@ export function Tabs({ tabs, value, onChange }) {
 
 /* --------------------------------------------------------------- table */
 
-export function Table({ columns, rows, onRowClick, empty, stack = true, keyField = '_id' }) {
+/**
+ * Data table.
+ *
+ * On phones it does not transpose every column into a label/value row — that
+ * produced six rows per person with "Department: Service" above
+ * "Designation: Service Engineer". Instead a column can be marked `primary`
+ * (the card's heading), `secondary` (its sub-line) or `hideOnMobile`, and
+ * what is left renders as compact pairs. A page can override the whole thing
+ * with `card`.
+ */
+export function Table({
+  columns,
+  rows,
+  onRowClick,
+  empty,
+  stack = true,
+  keyField = '_id',
+  sortable = false,
+  pageSize = 0,
+  card,
+  dense = false,
+}) {
+  const [sort, setSort] = useState(null);     // { key, dir }
+  const [page, setPage] = useState(0);
+
+  useEffect(() => { setPage(0); }, [rows?.length, sort]);
+
+  const sorted = useMemo(() => {
+    if (!rows) return rows;
+    if (!sort) return rows;
+    const col = columns.find((c) => c.key === sort.key);
+    if (!col) return rows;
+    const get = col.sortValue || ((r) => {
+      const v = r[col.key];
+      return v && typeof v === 'object' ? (v.name ?? v.title ?? '') : v;
+    });
+    const out = [...rows].sort((a, b) => {
+      const x = get(a), y = get(b);
+      if (x == null) return 1;
+      if (y == null) return -1;
+      if (typeof x === 'number' && typeof y === 'number') return x - y;
+      return String(x).localeCompare(String(y), undefined, { numeric: true, sensitivity: 'base' });
+    });
+    return sort.dir === 'desc' ? out.reverse() : out;
+  }, [rows, sort, columns]);
+
+  const pages = pageSize ? Math.ceil((sorted?.length || 0) / pageSize) : 1;
+  const visible = pageSize && sorted ? sorted.slice(page * pageSize, (page + 1) * pageSize) : sorted;
+
   if (!rows?.length) return empty || <Empty />;
+
+  const toggleSort = (key) => setSort((s) =>
+    !s || s.key !== key ? { key, dir: 'asc' }
+      : s.dir === 'asc' ? { key, dir: 'desc' }
+        : null);
+
+  const primary = columns.find((c) => c.primary) || columns[0];
+  const secondary = columns.find((c) => c.secondary);
+  const pairs = columns.filter(
+    (c) => c !== primary && c !== secondary && c.key !== 'actions' && !c.hideOnMobile,
+  );
+  const actionsCol = columns.find((c) => c.key === 'actions');
+
   return (
-    <div className="table-wrap">
-      <table className={`tbl ${stack ? 'stack' : ''}`.trim()}>
-        <thead>
-          <tr>{columns.map((c) => <th key={c.key} className={c.align === 'right' ? 'num' : ''} style={c.width ? { width: c.width } : undefined}>{c.label}</th>)}</tr>
-        </thead>
-        <tbody>
-          {rows.map((r) => (
-            <tr key={r[keyField]} className={onRowClick ? 'clickable' : ''} onClick={onRowClick ? () => onRowClick(r) : undefined}>
-              {columns.map((c) => (
-                <td key={c.key} data-label={c.label} className={c.key === 'actions' ? 'actions' : c.align === 'right' ? 'num' : ''}>
-                  {c.render ? c.render(r) : r[c.key]}
-                </td>
-              ))}
+    <>
+      <div className="table-wrap">
+        <table className={`tbl ${dense ? 'dense' : ''}`.trim()}>
+          <thead>
+            <tr>
+              {columns.map((c) => {
+                const canSort = sortable && c.sortable !== false && c.key !== 'actions';
+                const active = sort?.key === c.key;
+                return (
+                  <th
+                    key={c.key}
+                    className={`${c.align === 'right' ? 'num' : ''} ${canSort ? 'sortable' : ''}`.trim()}
+                    style={c.width ? { width: c.width } : undefined}
+                    aria-sort={active ? (sort.dir === 'asc' ? 'ascending' : 'descending') : undefined}
+                  >
+                    {canSort ? (
+                      <button type="button" className="th-sort" onClick={() => toggleSort(c.key)}>
+                        {c.label}
+                        <Icon name={active ? (sort.dir === 'asc' ? 'sortAsc' : 'sortDesc') : 'sort'} size={12} />
+                      </button>
+                    ) : c.label}
+                  </th>
+                );
+              })}
             </tr>
+          </thead>
+          <tbody>
+            {visible.map((r) => (
+              <tr
+                key={r[keyField]}
+                className={onRowClick ? 'clickable' : ''}
+                onClick={onRowClick ? () => onRowClick(r) : undefined}
+              >
+                {columns.map((c) => (
+                  <td
+                    key={c.key}
+                    data-label={c.label}
+                    className={c.key === 'actions' ? 'actions' : c.align === 'right' ? 'num' : ''}
+                  >
+                    {c.render ? c.render(r) : r[c.key]}
+                  </td>
+                ))}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      {stack && (
+        <div className="row-cards">
+          {visible.map((r) => card ? (
+            <div key={r[keyField]} className="row-card" onClick={onRowClick ? () => onRowClick(r) : undefined}>
+              {card(r)}
+            </div>
+          ) : (
+            <div key={r[keyField]} className="row-card" onClick={onRowClick ? () => onRowClick(r) : undefined}>
+              <div className="row-card-head">
+                <div className="grow" style={{ minWidth: 0 }}>
+                  {primary.render ? primary.render(r) : r[primary.key]}
+                  {secondary && (
+                    <div className="row-card-sub">{secondary.render ? secondary.render(r) : r[secondary.key]}</div>
+                  )}
+                </div>
+              </div>
+              {pairs.length > 0 && (
+                <dl className="row-card-pairs">
+                  {pairs.map((c) => (
+                    <div key={c.key}>
+                      <dt>{c.label}</dt>
+                      <dd>{c.render ? c.render(r) : r[c.key]}</dd>
+                    </div>
+                  ))}
+                </dl>
+              )}
+              {actionsCol && <div className="row-card-actions">{actionsCol.render(r)}</div>}
+            </div>
           ))}
-        </tbody>
-      </table>
-    </div>
+        </div>
+      )}
+
+      {pageSize > 0 && pages > 1 && (
+        <div className="pager">
+          <span className="small muted">
+            {page * pageSize + 1}–{Math.min((page + 1) * pageSize, sorted.length)} of {sorted.length}
+          </span>
+          <div className="row" style={{ gap: 'var(--sp-1)' }}>
+            <Button size="sm" icon="chevronLeft" aria-label="Previous page"
+              disabled={page === 0} onClick={() => setPage((p) => p - 1)} />
+            <span className="small muted" style={{ padding: '0 var(--sp-2)' }}>
+              Page {page + 1} of {pages}
+            </span>
+            <Button size="sm" icon="chevronRight" aria-label="Next page"
+              disabled={page >= pages - 1} onClick={() => setPage((p) => p + 1)} />
+          </div>
+        </div>
+      )}
+    </>
   );
 }
 
