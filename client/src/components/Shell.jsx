@@ -133,11 +133,12 @@ export default function Shell({ children }) {
 
       <aside className={`sidebar ${drawer ? 'open' : ''} ${collapsed ? 'collapsed' : ''}`}>
         <div className="sidebar-brand">
-          <span className="brand-mark">R</span>
-          {!collapsed && (
+          {collapsed ? (
+            <span className="brand-monogram">RB</span>
+          ) : (
             <div className="brand-text">
-              <div className="brand-name">Rockbreakers</div>
-              <div className="brand-sub">Field Service</div>
+              <div className="brand-name">Rock<em>Breakers</em></div>
+              <div className="brand-sub">Hydraulics</div>
             </div>
           )}
         </div>
@@ -178,7 +179,7 @@ export default function Shell({ children }) {
           </button>
 
           <nav className="crumbs hide-mobile" aria-label="Breadcrumb">
-            <Link to="/">Rockbreakers</Link>
+            <Link to="/">RockBreakers</Link>
             <span className="sep">/</span>
             {current?.group && current.group !== 'General' && (
               <>

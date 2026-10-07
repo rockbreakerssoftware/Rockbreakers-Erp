@@ -22,7 +22,7 @@ import { Empty } from './components/ui';
 function Boot({ message }) {
   return (
     <div className="boot">
-      <span className="brand-mark" style={{ width: 34, height: 34, fontSize: 15 }}>R</span>
+      <span className="brand-monogram" style={{ fontSize: 'var(--text-lg)' }}>RockBreakers</span>
       <div className="row" style={{ gap: 8 }}>
         <span className="spinner" />
         <span className="small">{message}</span>

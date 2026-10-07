@@ -31,26 +31,31 @@
   overflow: hidden;
 }
 .sidebar.collapsed .sidebar-brand { padding: 0; justify-content: center; }
+.sidebar-brand { text-decoration: none; }
 
-.brand-mark {
-  width: 28px; height: 28px;
-  border-radius: var(--radius-sm);
-  background: var(--accent-solid);
-  color: var(--accent-fg);
-  display: grid; place-items: center;
-  font-weight: var(--weight-semi); font-size: var(--text-sm);
-  flex: 0 0 auto;
+/*
+ * No badge. The wordmark is the logo; a filled letter tile beside a wordmark
+ * is two marks competing. The collapsed rail shows a plain RB monogram rather
+ * than a tile, so it reads as the same lockup, abbreviated.
+ */
+.brand-monogram {
+  font-weight: var(--weight-semi);
+  font-size: var(--text-md);
   letter-spacing: var(--tracking-tight);
+  color: var(--accent);
+  white-space: nowrap;
 }
 
 .brand-text { min-width: 0; overflow: hidden; }
 .brand-name {
-  color: #fff; font-weight: var(--weight-semi); font-size: var(--text-base);
-  letter-spacing: var(--tracking-snug); line-height: var(--leading-tight); white-space: nowrap;
+  color: #fff; font-weight: var(--weight-semi); font-size: var(--text-md);
+  letter-spacing: var(--tracking-tight); line-height: var(--leading-tight); white-space: nowrap;
 }
+.brand-name em { font-style: normal; color: var(--accent); }
 .brand-sub {
   color: var(--nav-label); font-size: var(--text-xs);
   letter-spacing: var(--tracking-wide); text-transform: uppercase; white-space: nowrap;
+  margin-top: 1px;
 }
 
 .sidebar-nav { flex: 1; overflow-y: auto; overflow-x: hidden; padding: var(--sp-3) var(--sp-2); }

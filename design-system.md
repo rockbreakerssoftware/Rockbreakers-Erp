@@ -41,11 +41,18 @@ role, not by value, so the same markup works in both themes:
 Dark mode steps each surface up in lightness rather than going flat black, so a popover over a card
 over the page reads as three planes.
 
-**Two accents, deliberately.** A fill carrying a white label and a marker carrying no text have
-different contrast duties. `--accent` (brand-500) is the brand hue for indicators, active nav bars,
-focus rings and chart marks. `--accent-solid` is the interactive fill behind a label — one stop darker
-in light mode, because white on brand-500 is only 3.19:1. In dark mode the amber is light enough to
-carry ink, so the fill stays brand-500 and the label flips.
+**The brand is hi-vis yellow, and its fills carry dark text.** Ink on brand-500 is 8.91:1; white on it
+is 1.92:1 and is never used. That constraint is the look rather than a workaround — black on yellow is
+what a machine decal does, and it suits a hydraulics business better than a generic SaaS blue.
+
+`--accent` (brand-500) is the hue for indicators, active nav bars, focus rings and chart marks.
+`--accent-solid` is the interactive fill, with `--accent-fg` as the dark label on it in both themes.
+
+**Status hues are checked for separation, not just contrast.** Moving the brand to yellow meant warn
+could not also be orange: orange sits 17° from danger red, which made "Attendance not marked" read as
+"Overdue jobs" at a glance. Warn stays amber at 31° from red. Amber is only 12° from the brand yellow,
+but the two never compete because the brand is always a fill behind dark text and warn is always text.
+Accent pill text is near-ink for the same reason — a brand pill must not look like a warning.
 
 Status colours are four tokens each — `-text`, `-bg`, `-border`, `-solid` — rather than a colour and a
 guess at its tint.

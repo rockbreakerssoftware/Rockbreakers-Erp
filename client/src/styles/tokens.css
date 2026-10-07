@@ -32,17 +32,24 @@
   --n-1000: #0a0a09;
 
   /* ------------------------------------------------------- brand ------ */
-  /* Safety amber. Used only for: primary action, active nav, focus ring.  */
-  --brand-50:  #fef6e9;
-  --brand-100: #fce9ca;
-  --brand-200: #f8d08d;
-  --brand-300: #f2b24f;
-  --brand-400: #e89627;
-  --brand-500: #d97706;
-  --brand-600: #b45309;
-  --brand-700: #8f400a;
-  --brand-800: #6b300b;
-  --brand-900: #44200a;
+  /*
+   * Hi-vis yellow — the colour this industry already wears. Used only for:
+   * primary action, active nav, focus ring.
+   *
+   * Yellow carries dark text, never white: ink on brand-500 is 8.91:1 while
+   * white on it is 1.92:1. That constraint is the look, not a workaround —
+   * black on yellow is what a machine decal does.
+   */
+  --brand-50:  #fefce8;
+  --brand-100: #fef9c3;
+  --brand-200: #fef08a;
+  --brand-300: #fde047;
+  --brand-400: #facc15;
+  --brand-500: #eab308;
+  --brand-600: #ca8a04;
+  --brand-700: #a16207;
+  --brand-800: #854d0e;
+  --brand-900: #713f12;
 
   /* --------------------------------------------------- type scale ----- */
   --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
@@ -135,19 +142,19 @@
      --accent-solid is the interactive fill behind white label text (4.5:1):
      white on brand-500 is only 3.19:1, so the fill steps one stop darker. */
   --accent:        var(--brand-500);
-  --accent-solid:       var(--brand-600);   /* white on this = 5.02:1 */
-  --accent-solid-hover: #a34a08;            /* white on this = 5.93:1 */
+  --accent-solid:       var(--brand-500);   /* ink on this = 8.91:1 */
+  --accent-solid-hover: var(--brand-600);   /* ink on this = 5.81:1 */
   --accent-solid-active: var(--brand-700);
-  --accent-fg:     #ffffff;
+  --accent-fg:     #1c1c19;                 /* dark label, never white */
   --accent-hover:  var(--brand-600);
   --accent-active: var(--brand-700);
   --accent-bg:     var(--brand-50);
   --accent-border: var(--brand-200);
-  --accent-text:   var(--brand-700);
+  --accent-text:   #3d3406;                 /* near-ink on the yellow tint, not gold */
 
   /* Status. -text meets AA on its own -bg and on --surface. */
   --ok-text:   #13742f;  --ok-bg:   #e8f5ec;  --ok-border:   #bbe3c8;  --ok-solid:   #16a34a;
-  --warn-text: #92540a;  --warn-bg: #fdf3e3;  --warn-border: #f5dcb0;  --warn-solid: #d97706;
+  --warn-text: #8a4f09;  --warn-bg: #fdf3e3;  --warn-border: #f3d9ae;  --warn-solid: #d97706;
   --bad-text:  #b4201c;  --bad-bg:  #fdeceb;  --bad-border:  #f6c9c6;  --bad-solid:  #dc2626;
   --info-text: #1d4ed8;  --info-bg: #eaeffb;  --info-border: #c6d4f7;  --info-solid: #2563eb;
   --neutral-bg: var(--n-100);
@@ -194,15 +201,15 @@
   --border-subtle: #222220;
 
   --accent:        var(--brand-500);
-  --accent-solid:       var(--brand-500);   /* ink on this = 5.36:1 */
+  --accent-solid:       var(--brand-500);   /* ink on this = 8.91:1 */
   --accent-solid-hover: var(--brand-400);
   --accent-solid-active: var(--brand-300);
   --accent-fg:     #1c1c19;
   --accent-hover:  var(--brand-400);
   --accent-active: var(--brand-300);
-  --accent-bg:     #2a1e0a;
-  --accent-border: #4d3510;
-  --accent-text:   var(--brand-300);
+  --accent-bg:     #2a2408;
+  --accent-border: #4d4310;
+  --accent-text:   var(--brand-400);        /* 12.04:1 on surface */
 
   /* Lightened so each clears 4.5:1 on the dark surface. */
   --ok-text:   #5dd48a;  --ok-bg:   #10231a;  --ok-border:   #1d4532;  --ok-solid:   #22c55e;
@@ -249,9 +256,9 @@
     --accent-hover:  var(--brand-400);
     --accent-active: var(--brand-300);
     --accent-fg:     #1c1c19;
-    --accent-bg:     #2a1e0a;
-    --accent-border: #4d3510;
-    --accent-text:   var(--brand-300);
+    --accent-bg:     #2a2408;
+    --accent-border: #4d4310;
+    --accent-text:   var(--brand-400);
 
     --ok-text:   #5dd48a;  --ok-bg:   #10231a;  --ok-border:   #1d4532;  --ok-solid:   #22c55e;
     --warn-text: #f0b44c;  --warn-bg: #261a08;  --warn-border: #4a3410;  --warn-solid: #e89627;

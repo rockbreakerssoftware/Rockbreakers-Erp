@@ -43,12 +43,9 @@ export default function Login() {
   return (
     <div className="login-wrap">
       <aside className="login-aside">
-        <div className="row" style={{ gap: 'var(--s3)', position: 'relative', zIndex: 1 }}>
-          <span className="brand-mark">R</span>
-          <div>
-            <div className="brand-name">Rockbreakers</div>
-            <div className="brand-sub">Field Service Management</div>
-          </div>
+        <div style={{ position: 'relative', zIndex: 1 }}>
+          <div className="brand-name">Rock<em>Breakers</em></div>
+          <div className="brand-sub">Hydraulics</div>
         </div>
 
         <div style={{ position: 'relative', zIndex: 1 }}>
@@ -70,18 +67,17 @@ export default function Login() {
         </div>
 
         <div className="xs" style={{ color: '#596170', position: 'relative', zIndex: 1 }}>
-          © {new Date().getFullYear()} Rockbreakers
+          © {new Date().getFullYear()} RockBreakers Hydraulics
         </div>
       </aside>
 
       <main className="login-main">
         <div className="login-card">
           <div className="only-mobile" style={{ marginBottom: 'var(--s6)' }}>
-            <div className="row" style={{ gap: 'var(--s3)' }}>
-              <span className="brand-mark">R</span>
-              <div>
-                <div className="strong">Rockbreakers</div>
-                <div className="xs muted">Field Service Management</div>
+            <div>
+              <div className="login-wordmark">Rock<em>Breakers</em></div>
+              <div className="xs muted" style={{ letterSpacing: 'var(--tracking-wide)', textTransform: 'uppercase' }}>
+                Hydraulics
               </div>
             </div>
           </div>
